@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- <p>
+	<b>Forgot Password</b><br><br>
+      <b> Welcome to the OnStation Customer Portal</b><br>  
+    </p> -->
+  </head>
+<meta charset="utf-8">
+		<!-- Javascript SDK-->
+		<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script>  
+		<script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/aws-cognito-sdk.min.js"></script>
+		<script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/amazon-cognito-identity.min.js"></script>
+        
+<body>
+    <form id = "myForm" class ="container">
+	<script>
+		document.write('<p><b>Forgot Password  </b></p>');
+		document.write('<b>Enter your email address and press<b><br>');
+		document.write('<b>Forgot Password button to <b><br>');
+		document.write('<b>start the reset process.</b><br><br>');
+	</script>
+	<br><label for="username" style = "font-size:15px;"><em>Username</em></label><br>
+	<input type="email" id="inputUsername"  name="username" required autofocus><br>
+	<br><button type="button" onclick="forgotpasswordbutton()" class="button1"><b>Forgot Password<b></button>
+	</form>
+</body>
+<style>
+.container {
+  position:relative;
+  text-align:center;
+}
+input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #000000;
+	padding:8px 45px;
+  text-align:center;
+}
+.button1 {
+  border: none;
+  color: black;
+  padding: 10px 97px;
+  
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin: 3px -1px;
+  cursor: pointer;
+  background-color: #00FF00;
+}
+a{
+color: #000000;
+text-decoration: none;
+font-size: 15px;
+}
+.ref{
+padding: 8px 0px;
+ font-size: 2px;
+}
+p{
+   font-size: 20px;
+  text-align:center;
+  }
+  </style>
+<script>
+function forgotpasswordbutton() {
+		
+	var poolData = {
+        UserPoolId : 'us-east-1_ieIdrYDE0', // Your user pool id here
+        ClientId : '6ms1aoqudckdok2i9iigb3pd8i', // Your client id here
+    };
+	
+    var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+	
+    var userData = {
+        Username : document.getElementById("inputUsername").value,
+        Pool : userPool,
+    };
+	
+    var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+		
+    cognitoUser.forgotPassword({
+        onSuccess: function (result) {
+            console.log('call result: ' + result);
+        },
+        onFailure: function(err) {
+            alert(err);
+			console.log(err);
+        },
+        inputVerificationCode() {
+			var temp = userData.Username;
+			sessionStorage.setItem('email',temp );
+			window.alert ("Check your email/spam for a verification code.");
+			document.getElementById("myForm").reset();
+			window.location.href ='https://www.onstationapp.com/resetpassword';
+        }
+    });
+  }
+
+</script>
+</html>

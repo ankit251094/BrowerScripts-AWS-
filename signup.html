@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+
+<html lang="en">
+ 
+    <meta charset="utf-8">
+	
+  <body>
+<!-- Javascript SDK-->
+	<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script> 
+	<script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/aws-cognito-sdk.min.js"></script>
+	<script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/amazon-cognito-identity.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" />
+     
+	<form id = "myForm" class ="container">
+	
+	<label for="email" style = "font-size:15px;"><em>Email</em></label><br>
+    <input type="email" class="form-control" id="emailInputRegister" style = "font-size:12px"  pattern=".*" required><br>
+	
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<label for="password" style = "font-size:15px"><em>Password</em></label>
+	<span toggle="#password-field" class="fa fa-fw fa-eye field_icon toggle-password"></span>
+	<br><input type="password" class="form-control" id="passwordInputRegister" style = "font-size:12px" pattern=".*" required>
+	
+	<script>
+	$(document).on('click', '.toggle-password', function() {
+
+    $(this).toggleClass("fa-eye fa-eye-slash");
+    
+    var input = $("#passwordInputRegister");
+    input.attr('type') === 'password' ? input.attr('type','text') : input.attr('type','password')
+	});
+	
+	</script>
+	
+	<br><label for="personalname" style = "font-size:15px;"><em>First Name</em></label><br>
+	<input type="personalname" class="form-control" id="personalnameRegister" style = "font-size:12px" pattern=".*" required><br>
+	
+	<label for="personalname2" style = "font-size:15px;"><em>Last Name</em></label><br>
+	<input type="personalname2" class="form-control" id="personalnameRegister2" style = "font-size:12px" pattern=".*" required><br>
+	
+	<label for="text" style = "font-size:15px;"><em> Organization</em></label><br>
+	<input type="text" class="form-control" id="organizationRegister" style = "font-size:12px"pattern=".*" required><br>
+	
+	<label for="text" style = "font-size:15px;"><em> Job Title</em></label><br>
+	<input type="text" class="form-control" id="jobTitleRegister"  style = "font-size:12px" pattern=".*" required><br>
+	
+	<label for="tel" style = "font-size:15px;"><em> Cell Phone Number</em></label><br>
+	<input type="tel" class="form-control" id="phone"  pattern=".*" style = "font-size:12px" required><br>
+	<button id="mainbutton" class="button1" type="button" onclick="registerButton()" ><b>Sign Up</b></button>
+   <div class = "ref">
+	  <a href="https://www.onstationapp.com/signin"><em><b>
+		I'm an existing user
+		
+		</em></b>
+		</a>   
+	
+	</form>
+	
+		
+<style>
+.container {
+  position:relative;
+  text-align:center;
+}
+input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #000000;
+	padding:8px 45px;
+	width : 280px;
+  text-align:center;
+}
+.button1 {
+  border: none;
+  color: black;
+  padding: 7px 167px;
+  
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin: 15px -1px;
+  cursor: pointer;
+  background-color: #00FF00;
+}
+a{
+color: #000000;
+text-decoration: none;
+font-size: 15px;
+padding: 8px 20px;
+}
+.ref{
+padding: 10px 224px;
+ font-size: 2px;
+text-align:center;  
+}
+p{
+   font-size: 20px;
+  text-align:center;
+  }
+
+
+</style>
+	
+	<script>
+
+		var username;
+		var password;
+		var firstname;
+		var lastname;
+		var jobtitle;
+		var organization;
+		var phonenumber;
+		var poolData;
+			
+	  function registerButton() {
+			
+		username = document.getElementById("emailInputRegister").value;
+		password = document.getElementById("passwordInputRegister").value;	
+		firstname = document.getElementById("personalnameRegister").value;
+		lastname = document.getElementById("personalnameRegister2").value;
+		organization = document.getElementById("organizationRegister").value;
+		jobtitle = document.getElementById("jobTitleRegister").value;
+		phonenumber = "+1" + document.getElementById("phone").value;
+	  
+		var poolData = {
+        UserPoolId : 'us-east-1_ieIdrYDE0', // Your user pool id here
+        ClientId : '6ms1aoqudckdok2i9iigb3pd8i', // Your client id here
+    };
+	  
+			var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+			var userData = {
+			Username : username, // your username here
+			Pool : userPool
+		};
+		var attributeList = [];
+		
+		var dataEmail = {
+			Name : 'email', 
+			Value : username, //get from form field
+		};
+		
+		var dataFirstName = {
+			Name : 'given_name', 
+			Value : firstname, //get from form field
+		};
+		
+		var dataLastName ={
+		Name : 'family_name', 
+		Value : lastname,
+		}; 
+		
+		var dataPhoneNumber ={
+		Name : 'phone_number', 
+		Value : phonenumber,
+		}; 
+		
+		var dataJobTitle ={
+		Name : 'custom:jobTitle', 
+		Value : jobtitle,
+		};
+		
+		var dataCompanyName ={
+		Name : 'custom:companyName', 
+		Value : organization,
+		};
+		var attributeEmail = new AmazonCognitoIdentity.CognitoUserAttribute(dataEmail);
+		var attributePersonalName = new AmazonCognitoIdentity.CognitoUserAttribute(dataFirstName); 
+		var attributeLastName = new AmazonCognitoIdentity.CognitoUserAttribute(dataLastName); 
+		var attributePhoneNumber = new AmazonCognitoIdentity.CognitoUserAttribute(dataPhoneNumber); 
+		var attributeJobTitle = new AmazonCognitoIdentity.CognitoUserAttribute(dataJobTitle); 
+		var attributeCompanyName = new AmazonCognitoIdentity.CognitoUserAttribute(dataCompanyName); 
+		
+		attributeList.push(attributeEmail);
+		attributeList.push(attributePersonalName);
+		attributeList.push(attributeLastName);
+		attributeList.push(attributePhoneNumber);
+		attributeList.push(attributeJobTitle);
+		attributeList.push(attributeCompanyName);
+		
+		
+		var cognitoUser;
+			userPool.signUp(username, password, attributeList, null, function(err, result){
+			if (err) {
+				alert(err.message || JSON.stringify(err));
+				return;
+			}
+			cognitoUser = result.user;
+			console.log('user name is ' + cognitoUser.getUsername());
+			console.log('attribute list',attributeList);
+
+			//var cognitoUser = userPool.getCurrentUser();
+			//console.log('cognitoUser =',cognitoUser);
+			//change elements of page
+			//document.getElementById("titleheader").innerHTML = "Check your email for a verification link";
+              window.alert ("Check your email/spam for a verification link.\n SignUp Completed Successfully");
+             document.getElementById("myForm").reset();
+             window.location.href ='https://www.onstationapp.com/signin';
+			});											
+}
+	  
+	</script>		
+ </body>
+  
+</html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  </head>
+<meta charset="utf-8">
+		<!-- Javascript SDK-->
+		<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script>  
+		<script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/aws-cognito-sdk.min.js"></script>
+		<script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/amazon-cognito-identity.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" />
+ 
+<body>
+<style>
+.container {
+  position:relative;
+  text-align:center;
+}
+input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #000000;
+	padding:8px 45px;
+  text-align:center;
+}
+.button1 {
+  border: none;
+  color: black;
+  padding: 10px 97px;
+  
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin: 3px -1px;
+  cursor: pointer;
+  background-color: #00FF00;
+}
+a{
+color: #000000;
+text-decoration: none;
+font-size: 15px;
+}
+.ref{
+padding: 8px 0px;
+ font-size: 2px;
+}
+p{
+   font-size: 20px;
+  text-align:center;
+  }
+  </style>
+  <form class ="container">
+  <script>
+	document.write('<p><b>Reset Password</b></p><br>');
+	  document.write('<b>Verification Code was sent to</b><br>');
+	  document.write("<b>",sessionStorage.getItem('email'),"<b>");
+	 
+	  </script>
+	<br><br><label for="username" style = "font-size:15px;"><em>Username</em></label><br>
+	<!-- <input type="email" id="inputUsername"  name="username" required autofocus><br> -->
+	<script>
+	var username = sessionStorage.getItem('email');
+	document.write('<input type="email" id="inputUsername"  value="'+username+'" ><br>');
+	</script>
+	<br><label for="text" style = "font-size:15px;"><em>Verification Code</em></label><br>
+	<input type="text" id="inputCode"  name="code" required autofocus><br>
+	<br><label for="password" style = "font-size:15px"><em>New Password</em></label>
+	<span toggle="#password-field" class="fa fa-fw fa-eye field_icon toggle-password"></span>
+	<br><input type="password" id="inputPassword"  name="password" required><br><br>
+	<script>
+	$(document).on('click', '.toggle-password', function() {
+
+    $(this).toggleClass("fa-eye fa-eye-slash");
+    
+    var input = $("#inputPassword");
+    input.attr('type') === 'password' ? input.attr('type','text') : input.attr('type','password')
+	});
+	
+	</script>
+	<br><label for="password" style = "font-size:15px"><em>Confirm Password</em></label>
+	<span toggle="#password-field" class="fa fa-fw fa-eye field_icon toggle-password"></span>
+	<br><input type="password" id="inputPassword2"  name="password" required><br><br>
+	<script>
+	$(document).on('click', '.toggle-password', function() {
+
+    $(this).toggleClass("fa-eye fa-eye-slash");
+    
+    var input = $("#inputPassword2");
+    input.attr('type') === 'password' ? input.attr('type','text') : input.attr('type','password')
+	});
+	
+	</script>
+	
+	<br><button type="button" onclick="resetpasswordbutton()" class="button1"><b>Reset Password<b></button>
+</form>
+</body>
+<script>
+function resetpasswordbutton() {
+
+var verificationCode = document.getElementById("inputCode").value;
+var newPassword = document.getElementById("inputPassword").value;
+var confirmPassword = document.getElementById("inputPassword2").value;
+
+var poolData = {
+        UserPoolId : 'us-east-1_ieIdrYDE0', // Your user pool id here
+        ClientId : '6ms1aoqudckdok2i9iigb3pd8i', // Your client id here
+    };
+	
+    var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+	
+    var userData = {
+        Username : document.getElementById("inputUsername").value,
+        Pool : userPool,
+    };
+	
+    var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+	
+	if (newPassword != confirmPassword) {
+			alert("New Password and Confirm Password.\nDo Not Match!")
+			}
+	else {
+	cognitoUser.confirmPassword(verificationCode, newPassword,{
+            onSuccess() {
+            window.alert('Password Reset completed Successfully.');
+			window.location.href ='https://www.onstationapp.com/signin';
+			
+        },
+        onFailure(err) {
+			window.alert('Password Reset Failed.');
+        },
+        });
+		}
+}
+</script>
+</html>

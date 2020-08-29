@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<p><b><span id='demo4'></span> User License(s)</b></p> 
+<p>License Code <br> <br><span id='demo' style='display: inline; border:2px black solid; font-size:28px;width:fit-content; padding: 5px 10px;'></span>  </p>
+<p style= 'font-size:22px;' >A receipt and instructions to activate your<br>
+ license(s) have been sent to your email<br></p>
+ <p><b><span id='demo1'></span> </b></p><br>
+ 
+<div class = "ref">
+	  <a href="https://www.onstationapp.com/customer-portal-options" class="button1"><b>Back To Portal</b></a>
+	 <div>
+
+<body>
+
+<!-- Javascript SDK-->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script>  
+<script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/aws-cognito-sdk.min.js"></script>
+<script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/amazon-cognito-identity.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+//var email = localStorage.getItem("email");
+var email = '';
+var password = '';
+var poolData = {
+UserPoolId : 'us-east-1_ieIdrYDE0', // Your user pool id here
+ClientId : '6ms1aoqudckdok2i9iigb3pd8i', // Your client id here
+ };
+var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+ var userData = {
+Username : email,
+Pool : userPool,};
+console.log(userPool);
+var authenticationData = {
+        Username : email,
+        Password : password,
+    };
+	
+    var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+    
+var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+//var cognitoUser = userPool.getCurrentUser();
+
+cognitoUser.authenticateUser(authenticationDetails, {
+        onSuccess: function (result) {
+			console.log("User Logged In & Contents added to DynamoDB");
+			console.log('cognitoUser',cognitoUser);
+			scanDynamoDB(cognitoUser,email);
+			},
+
+        onFailure: function(err) {
+            alert(err.message || JSON.stringify(err));
+        },
+    });
+//console.log('cognitoUser',cognitoUser);
+
+
+});
+
+function scanDynamoDB(cognitoUser,email){
+this.cognitoUser = cognitoUser;
+if (cognitoUser != null){
+cognitoUser.getSession(function(err, session) {
+      if (err) {
+        console.log(err);
+        return;
+      }
+ console.log('session validity: ' + session.isValid());
+ console.log('session token: ' + session.getIdToken().getJwtToken());
+email = localStorage.getItem("email");
+//email = 'patrickjrusso@yahoo.com';
+console.log('LocalEmail',email);
+
+
+AWS.config.region = 'us-east-1';
+AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+IdentityPoolId : 'us-east-1:306db06c-fd65-40a5-a655-f644c73dd639', 
+
+Logins : {
+          // Change the key below according to the specific region your user pool is in.
+          'cognito-idp.us-east-1.amazonaws.com/us-east-1_ieIdrYDE0' : session.getIdToken().getJwtToken()
+        }
+      });
+	  
+ AWS.config.credentials.get(function(err) {
+ if (!err) {
+ console.log('Entered');
+ var docClient = new AWS.DynamoDB.DocumentClient({ region: AWS.config.region });
+ var params = {
+  TableName: 'License',
+  IndexName : 'customerEmail-purchaseDate-index',
+  KeyConditionExpression:"customerEmail = :email",
+  //FilterExpression: "customerEmail = :email",		
+  ExpressionAttributeValues: {
+			':email': email
+		},
+	ScanIndexForward : false,
+	Limit : 1
+  };
+  docClient.query(params, function(err, data) {
+      if (err) 
+	  {
+	  console.log(err);
+	  }
+      else 
+		{
+		 console.log('length ',data.Items.length);
+		 console.log(data);
+		 var obj = data.Items;
+		 var objParsed = obj[0];
+		 var licenseCode = objParsed.licenseCode;
+		 var emailId = objParsed.customerEmail;
+		 var purchaseDate = objParsed.purchaseDate;
+		 purchaseDate = purchaseDate.substring(0,10);
+		 console.log(purchaseDate);
+		 var expirationDate = objParsed.expirationDate;
+		 expirationDate = expirationDate.substring(0,10);
+		 console.log(expirationDate);
+		 var currentQuantity = objParsed.currentQuantity;
+		 console.log('currentQuantity',currentQuantity);
+
+		 //document.write("<h1>Thankyou for Purchasing UserLicense with OnStation.</h1>");
+		 document.getElementById("demo").innerHTML = licenseCode;
+		 document.getElementById("demo1").innerHTML = emailId;
+		 //document.getElementById("demo2").innerHTML = purchaseDate;
+		 //document.getElementById("demo3").innerHTML = expirationDate;
+		 document.getElementById("demo4").innerHTML = currentQuantity;
+		 //document.write("<h2>Purchase Summary</h2>");
+		 //document.write("<p><b>License Code : ",licenseCode ,"</b></p>");
+		 //document.write("<p><b>Email Id : ",emailId ,"</b></p>");
+		 //document.write("<p><b>Purchase Date : ",purchaseDate ,"</b></p>");
+		 //document.write("<p><b>Expiration Date : ",expirationDate ,"</b></p>");
+		 //document.write("<p><b>Purchase Quantity : ",currentQuantity ,"</b></p>");
+		 // document.write("</body>");
+		}
+    });
+ }
+ else{
+ console.log(err);
+ }
+});
+	  
+	  
+});
+}
+
+}
+
+</script>
+
+<style>
+p{
+	text-align : center;
+	font-size : 20px;
+	margin-bottom : 2 em;
+
+}
+
+.button1 {
+        background-color: #00d60b;
+        border: none;
+        color: black;
+        padding: 4px 15px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 18px;
+        margin: 1px 2px;
+        cursor: pointer;
+		position:relative;
+      }
+</style>
+
+</html>

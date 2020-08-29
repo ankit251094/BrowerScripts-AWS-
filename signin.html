@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+</head>
+  <body>
+      <p>
+      <b> Get started by signing in or signing up.</b>
+    </p> 
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" />
+    <form class ="container">
+		<!-- <div class = "input_params"> -->
+		<label for="username" style = "font-size:15px;"><em>Username</em></label><br>
+		<input type="email" id="inputUsername"  name="username" style = "font-size:12px"required autofocus><br>
+		<label for="password" id = "label1"style = "font-size:15px" ><em>Password</em></label>
+		<span toggle="#password-field" class="fa fa-fw fa-eye field_icon toggle-password"></span>
+		<br><input type="password" id="inputPassword"  name="password" style = "font-size:12px" required><br>
+		<script>
+	$(document).on('click', '.toggle-password', function() {
+
+    $(this).toggleClass("fa-eye fa-eye-slash");
+    
+    var input = $("#inputPassword");
+    input.attr('type') === 'password' ? input.attr('type','text') : input.attr('type','password')
+	});
+	
+	</script>
+		
+		<button type="button" onclick="signInButton()" class="button1"><b>Sign in</button><br>
+      
+	  <div class = "ref">
+	  <a href="https://www.onstationapp.com/signup"><em><b>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;I'm a new user 
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</em></b>
+		</a>
+		<a href="https://www.onstationapp.com/forgotpassword"><em><b>
+		Forgot Password?</em></b>
+		</a>
+	 <div>
+    </form>
+
+	  
+
+<style>
+.container {
+  position:relative;
+  text-align:left;
+  margin : 0px;
+  float: left;
+}
+input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #000000;
+	padding:5px 46px;
+	width : 280px;
+	text-align:center;
+}
+.button1 {
+  border: none;
+  color: black;
+  padding: 6px 164px;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  margin: 15px -1px;
+  cursor: pointer;
+  background-color: #00FF00;
+}
+a{
+color: #000000;
+text-decoration: none;
+font-size: 15px;
+}
+.ref{
+padding: -6px 10px;
+ font-size: 2px;
+text-align:left;
+}
+p{
+   font-size: 20px;
+  text-align:left;
+  padding: -6px ;
+  }
+h1{
+float: right;
+}
+
+</style>
+ <meta charset="utf-8">
+		<!-- Javascript SDK-->
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script>  
+	<script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/aws-cognito-sdk.min.js"></script>
+<script src="https://rawgit.com/aws/amazon-cognito-identity-js/master/dist/amazon-cognito-identity.min.js"></script>
+        
+<script>
+
+  function signInButton() {
+    
+	var authenticationData = {
+        Username : document.getElementById("inputUsername").value,
+        Password : document.getElementById("inputPassword").value,
+    };
+	
+    var authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(authenticationData);
+    
+	var poolData = {
+        UserPoolId : 'us-east-1_ieIdrYDE0', // Your user pool id here
+        ClientId : '6ms1aoqudckdok2i9iigb3pd8i', // Your client id here
+    };
+	
+    var userPool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+	
+    var userData = {
+        Username : document.getElementById("inputUsername").value,
+        Pool : userPool,
+    };
+	
+    var cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
+    var boolcheck =false;
+	cognitoUser.authenticateUser(authenticationDetails, {
+        onSuccess: function (result) {
+			addToDynamoDB(cognitoUser,poolData,userData);
+			//console.log("User Logged In & Contents added to DynamoDB");
+			},
+
+        onFailure: function(err) {
+            alert(err.message || JSON.stringify(err));
+        },
+    });
+
+  }
+  
+  function addToDynamoDB(userFromCognito,poolDataReq,userDataReq){
+  console.log("cognitoUser",userFromCognito.getUser);
+  console.log("PoolData is",poolDataReq.UserPoolId);
+  console.log('UserName is',userDataReq.Username);
+  var boolreturn;
+
+  
+  var cognitoUser = userFromCognito;
+   if (cognitoUser != null) {
+    cognitoUser.getSession(function(err, session) {
+      if (err) {
+        console.log(err);
+        return;
+      }
+
+      console.log('session validity: ' + session.isValid());
+      console.log('session token: ' + session.getIdToken().getJwtToken());
+		var jwt = session.getIdToken().getJwtToken();
+		var tokens = jwtDecode(jwt);
+		var email = tokens.email;
+		var attributeName = tokens.given_name;
+		var attributeLastName = tokens.family_name;
+		var attributePhoneNumber = tokens.phone_number;
+		var attributeJobTitle = tokens['custom:jobTitle'];
+		var attributeCompany = tokens['custom:companyName'];
+		console.log("Name",attributeName);
+      //alert("Name" +attributeName);
+		console.log("JobTitle ",attributeJobTitle);
+      //alert("Email"+attributeEmail);
+		//
+		  AWS.config.region = 'us-east-1';
+      AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+        IdentityPoolId : 'us-east-1:306db06c-fd65-40a5-a655-f644c73dd639', 
+        Logins : {
+          // Change the key below according to the specific region your user pool is in.
+          'cognito-idp.us-east-1.amazonaws.com/us-east-1_ieIdrYDE0' : session.getIdToken().getJwtToken()
+        }
+      });
+
+      AWS.config.credentials.get(function(err) {
+        if (!err) {
+          var id = AWS.config.credentials.identityId;
+          console.log('Cognito Identity ID '+ id);
+		  var uniqueNumber = new Date().getTime();
+		  uniqueNumber = uniqueNumber *1000;
+		  console.log("uniqueNumber",uniqueNumber.toString());
+		  var docClient = new AWS.DynamoDB.DocumentClient({ region: AWS.config.region });
+          var params = {
+            TableName: 'UserProfile',
+            Item:{
+			userId:uniqueNumber.toString(),
+			email:email,
+			firstName:attributeName,
+			lastName:attributeLastName,
+			mobileNumber:attributePhoneNumber,
+			jobTitle : attributeJobTitle,
+			organization:attributeCompany,
+			deviceToken:"WebApp"
+			}
+          };
+		  
+		  var paramsQuery = {
+			TableName: 'UserProfile',
+			FilterExpression: "email = :email",
+			
+            ExpressionAttributeValues: {
+			':email': email
+		
+		}
+		  };
+		  
+          //Query the table to identify if the user is in the table already. If the user is not in the table add his Cognito id as the hash key
+                                docClient.scan(paramsQuery, function(err, data) {
+                                    if (err) {
+                                        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
+                                    } else {
+                                        console.log("Query succeeded.");
+                                        if( data.Items.length == 0) {
+                                            console.log("User first time sign in - adding to table.");
+                                            docClient.put(params, function (err, data) {
+                                                if (err) 
+													{
+													console.log(err);
+													}
+                                                else 
+												{
+												console.log(data);
+												localStorage.setItem('firstName',attributeName );
+												localStorage.setItem('lastName',attributeLastName );
+												localStorage.setItem('email',email);
+												window.location.href ='file:///C:/Users/Ankit%20Pandey/Desktop/Stripe/Working%20Directory/test_chargebee.htmfile:///C:/Users/Ankit%20Pandey/Desktop/Stripe/Working%20Directory/Chargebee_test/test_chargebee.htmll';
+												}
+                                            });
+                                        }else{
+                                            console.log("User exists in the table already.");
+											localStorage.setItem('firstName',attributeName );
+											localStorage.setItem('lastName',attributeLastName );
+											localStorage.setItem('email',email);
+											//console.log(sessionStorage.getItem('firstName'));
+											window.location.href ='filefile:///C:/Users/Ankit%20Pandey/Desktop/Stripe/Working%20Directory/Chargebee_test/test_chargebee.html:///C:/Users/Ankit%20Pandey/Desktop/Stripe/Working%20Directory/test_chargebee.html';
+                                        }
+
+                                    }
+                                });
+		  
+		  
+		  }});
+		
+		//
+        });
+	  }
+
+  }
+  
+  function jwtDecode(t) {
+  let token = {};
+  token.raw = t;
+  token.header = JSON.parse(window.atob(t.split('.')[0]));
+  token.payload = JSON.parse(window.atob(t.split('.')[1]));
+  //var v = token.payload.name;
+  //console.log(v);
+  return (token.payload)
+}
+
+</script>
+</body>
+</html>
